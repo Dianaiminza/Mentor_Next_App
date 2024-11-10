@@ -1,75 +1,159 @@
-"use client"
-import Image from "next/image"
-import Link from "next/link";
+"use client";
+import {useEffect, useState} from "react";
+import useAuthStore from "@hertechquest/store/authStore";
+import { useRouter } from "next/navigation";
+export default function LoginPage() {
+    const router = useRouter();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const setUser = useAuthStore((state) => state.setUser);
+    const setToken = useAuthStore((state) => state.setToken);
+    const user = useAuthStore((state) => state.user);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        const validateSession = async () => {
+            const response = await fetch("/token");
 
-export default function Page(){
-    //const url = 'https://mentorapi-tawz.onrender.com/api/users/signin'
-    const url = '/api/login/'
-   async function handleSubmit(e) {
-        e.preventDefault()
-        console.log(e, e.target)
-        const formData = new FormData(e.target);
-        const fromForm = Object.fromEntries(formData)
-        const json = JSON.stringify(fromForm)
-        const request = {
-            method: "POST",
-            headers: {
-                "Content-Type" : "application/json"
-            },
-            body: json
+            const data = await response.json();
+
+            if (response.ok) {
+                setUser(data.user);
+            } else {
+                console.log("No valid token found");
+            }
+        };
+
+        validateSession();
+    }, [setUser, setToken]);
+
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+            const response = await fetch("/auth", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || "Authentication failed");
+                setLoading(false);
+                return;
+            }
+
+            setUser(data.user);
+            setToken(data.token);
+            setLoading(false);
+        } catch (error: any) {
+            setError(error.message || "An error occurred during login");
+            setLoading(false);
         }
-        const response = await fetch(url, request)
-
-       if (response.ok){
-       }
-    }
+    };
+    useEffect(() => {
+        if (user) {
+            router.push("/");
+        }
+    }, [user, router]);
     return (
-        <div className="w-full lg:grid lg:min-h-[95vh]  lg:grid-cols-2 xl:min-h-[95vh]">
-            <div className="flex items-center justify-center py-12">
-                <div className="mx-auto grid w-[350px] gap-6">
-                    <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold">Login</h1>
-                    </div>
-                    <div className="grid gap-4">
-                        <form onSubmit={handleSubmit}>
-                            <div className="grid gap-2">
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">Email address</label>
-                                    <div className="mt-2">
-                                        <input id="email" name="email" type="email" autoComplete="email" required className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 pl-2.5" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <div className="flex items-center justify-between">
-                                    <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">Password</label>
-                                </div>
-                                <div className="mt-2">
-                                    <input id="password" name="password" type="password" autoComplete="current-password" required className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 pl-2.5"/>
-                                </div>
-                            </div>
-                            <button className=" w-full mt-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded" type='submit'>
-                                Login
+        <div className="flex  items-center justify-center min-h-screen bg-[#1b1834]">
+            <div
+                className=" bg-emerald-50 w-[28rem] shadow-2xl rounded md:flex-row md:space-y-0"
+            >
+                <form onSubmit={handleLogin}>
+                    <div className="md:p-14">
+                        <div className="py-4 ">
+                            <span className="mb-2 text-md">Email</span>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="block w-full rounded-md p-2.5 text-gray-900"
+                            />
+                        </div>
+                        <div className=" py-4">
+                            <span className="mb-2 text-md">Password</span>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="block w-full rounded-md p-2.5 text-gray-900"
+                            />
+                        </div>
+                        {loading ? (
+                            <button type="submit"
+                                    className="w-full bg-[#1b1834] text-white p-2 rounded-lg mb-6 hover:bg-white hover:text-black hover:border hover:border-gray-300"
+                            >
+                                Signing in ...
                             </button>
-                        </form>
+                        ) : (
+                            <button type="submit"
+                                    className="w-full bg-[#1b1834] text-white p-2 rounded-lg mb-6 hover:bg-white hover:text-black hover:border hover:border-gray-300"
+                            >
+                            Sign in
+                            </button>
+                        )}
+
                     </div>
-                    <div className="mt-4 text-center text-sm">
-                        Don&apos;t have an account?{" "}
-                        <Link href="#" className="underline">
-                            Sign up
-                        </Link>
-                    </div>
-                </div>
-            </div>
-            <div className="hidden bg-muted lg:block">
-                <Image
-                    src="/hertechquest1.jpg"
-                    alt="Image"
-                    width="1920"
-                    height="1080"
-                    className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-                />
+
+                </form>
+
             </div>
         </div>
-    )
+        /*   <div className="bg-[#1b1834] min-h-screen flex items-center justify-center ">
+               <div className="bg-amber-300 border-r-8">
+                   <form onSubmit={handleLogin} className="grid gap-4">
+                       <div>
+                           <label htmlFor="email" className="block text-sm font-medium">Email address</label>
+                           <input
+                               id="email"
+                               name="email"
+                               type="email"
+                               required
+                               value={email}
+                               onChange={(e) => setEmail(e.target.value)}
+                               className="block w-full rounded-md p-2.5 text-gray-900"
+                           />
+                       </div>
+                       <div>
+                           <label htmlFor="password" className="block text-sm font-medium">Password</label>
+                           <input
+                               id="password"
+                               name="password"
+                               type="password"
+                               required
+                               value={password}
+                               onChange={(e) => setPassword(e.target.value)}
+                               className="block w-full rounded-md p-2.5 text-gray-900"
+                           />
+                       </div>
+                       {loading ? (
+                           <button type="button" className="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded"
+                                   disabled>
+                               Logging in...
+                           </button>
+                       ) : (
+                           <button type="submit" className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded">
+                               Login
+                           </button>
+                       )}
+                   </form>
+
+               </div>
+
+
+           </div>*/
+    );
 }
