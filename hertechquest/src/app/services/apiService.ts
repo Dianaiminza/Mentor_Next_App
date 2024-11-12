@@ -61,11 +61,11 @@ class ApiService {
             if (!data || !data.data) {
                 return { success: false, data: [] };
             }
-            console.log(`Fetched discussions: ${JSON.stringify(data)}`);
+            //console.log(`Fetched discussions: ${JSON.stringify(data)}`);
 
             return data;
         } catch (error) {
-            console.error('Error fetching discussions:', error);
+            //console.error('Error fetching discussions:', error);
             return { success: false, data: [] };
         }
     }

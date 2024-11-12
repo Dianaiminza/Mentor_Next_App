@@ -13,7 +13,7 @@ const TestDiscussionPage = () => {
             try {
                 await fetchDiscussions("");
             } catch (error) {
-                console.error("Error fetching discussions:", error);
+                //console.error("Error fetching discussions:", error);
             } finally {
                 setLoading(false);
             }
